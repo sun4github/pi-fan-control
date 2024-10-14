@@ -1,0 +1,11 @@
+[Unit]
+Description=Monitor CPU temp and turns on fan at different speeds.Defaults to 50 and 75 for thresholds
+After=multi-user.target
+
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/suneel/repos/pi-fan-control/advanced_fan_control.py --lower_threshold=58
+
+[Install]
+WantedBy=multi-user.target
