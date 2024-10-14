@@ -28,7 +28,7 @@ def calculate_rpm():
 
     # Calculate RPM based on pulse count and time elapsed
     # Adjust the pulse per revolution ratio if necessary
-    pulses_per_revolution = 1  # Change this depending on your tachometer's spec
+    pulses_per_revolution = 2  # Change this depending on your tachometer's spec
 
     # RPM formula: (Pulse count / pulses per revolution) / elapsed time in minutes
     rpm = (pulse_count / pulses_per_revolution) / (elapsed_time / 60)
@@ -40,7 +40,7 @@ def calculate_rpm():
 
 while True:
     # Wait for 1 second (adjust depending on how frequently you want to check RPM)
-    sleep(1)
+    sleep(2)
 
     # Calculate and print RPM
     rpm = calculate_rpm()

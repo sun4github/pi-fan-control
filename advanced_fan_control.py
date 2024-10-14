@@ -9,8 +9,10 @@ tachometer=Button(tachometer_pin)
 
 pulse_count=0
 start_time=time()
-lowest_rpm=2999
-highest_rpm=17000
+lowest_rpm=0 #from observations of tach_test.py
+highest_rpm=8500
+temp_segment = 0
+pwm_segment=0.1
 
 pulses_per_revolution=2
 
@@ -41,37 +43,32 @@ def get_cpu_temp():
 	temp = temp.replace("temp=","").replace("'C\n","")
 	return float(temp)
 
-def get_target_rpm(temp, lower_threshold, upper_threshold):
-	if temp < lower_threshold:
+
+
+def adjust_pwm_to_temp(temp, lower_threshold, upper_threshold):
+	if temp <= lower_threshold + temp_segment:
+		fan_pwm.value = 0
 		return 0
-	elif lower_threshold <= temp  <= upper_threshold:
-		return lowest_rpm + ((temp-lower_threshold) * (highest_rpm - lowest_rpm) / (upper_threshold - lower_threshold))
-	else:
-		return highest_rpm
 
+	if  temp > upper_threshold:
+		fan_pwm.value = 1
+		return 1
 
-def adjust_pwm_to_rpm(target_rpm, current_rpm):
-	error = target_rpm - current_rpm
-	k_p = 0.00005
-	pwm_adjustment = k_p * error
-
-	new_pwm_value = max(0,min(fan_pwm.value + pwm_adjustment, 1))
-	fan_pwm.value = new_pwm_value
-	return new_pwm_value
+	fan_pwm.value = pwm_segment * ((temp - lower_threshold)// temp_segment)
+	return fan_pwm.value
 
 def main(lower_threshold, upper_threshold):
+	global temp_segment
+	temp_segment = (upper_threshold - lower_threshold)/10
 	while True:
 		temp = get_cpu_temp()
 
-		target_rpm = get_target_rpm(temp, lower_threshold, upper_threshold)
-
 		current_rpm =calculate_rpm()
 
-		pwm_value = adjust_pwm_to_rpm(target_rpm, current_rpm)
+		pwm_value = adjust_pwm_to_temp(temp, lower_threshold, upper_threshold)
 
-		#print(f"CPU Temp: {temp}C, Target RPM: {target_rpm.Of}, Current RPM: {current_rpm.Of}, PWM:{pwm_value.2f}")
-		print(f"CPU Temp: {temp:.0f}°C, Target RPM: {target_rpm:.0f}, Current RPM: {current_rpm:.0f}, PWM: {pwm_value:.3f}")
-		sleep(1) 
+		#print(f"CPU Temp: {temp:.0f}°C,  Current RPM: {current_rpm:.0f}, PWM: {pwm_value:.5f}")
+		sleep(30) 
 
 
 
@@ -79,7 +76,7 @@ def main(lower_threshold, upper_threshold):
 if __name__ == "__main__":
 	parser=argparse.ArgumentParser(description="Fan control with temperature thresholds")
 	parser.add_argument('--lower_threshold',type=float,default=50.0, help='Temperature to start increasing the fan speed')
-	parser.add_argument('--upper_threshold',type=float,default=75.0, help='Temperature to reach maz fan speed')
+	parser.add_argument('--upper_threshold',type=float,default=65.0, help='Temperature to reach maz fan speed')
 	
 	args =  parser.parse_args()
 
